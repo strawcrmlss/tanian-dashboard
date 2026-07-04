@@ -1,17 +1,17 @@
-# tanian_app
+# Tanian Dashboard
 
-A new Flutter project.
+Aplikasi dashboard UMKM pertanian berbasis Flutter.
 
-## Getting Started
+## Fitur
+- Splash Screen
+- Login, Register, Forgot Password
+- Dashboard
+- CRUD Produk
+- Upload Foto Produk
+- Laporan Penjualan
+- Profil UMKM
+- Responsive UI
+- REST API (JSON Server)
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## API
+https://my-json-server.typicode.com/strawcrmlss/tanian-api/products
