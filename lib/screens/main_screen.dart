@@ -5,7 +5,6 @@ import 'dashboard_screen.dart';
 import 'product_screen.dart';
 import 'report_screen.dart';
 import 'profile_screen.dart';
-import 'maps_screen.dart'; // Tambahan import untuk Maps
 
 /// Layar utama dengan BottomNavigationBar.
 /// Menggunakan IndexedStack agar state tiap tab tetap terjaga.
@@ -24,7 +23,6 @@ class _MainScreenState extends State<MainScreen> {
     ProductScreen(),
     ReportScreen(),
     ProfileScreen(),
-    MapsScreen(), // Tambahan tab Maps
   ];
 
   @override
@@ -83,14 +81,6 @@ class _MainScreenState extends State<MainScreen> {
                   current: _currentIndex,
                   onTap: (i) => setState(() => _currentIndex = i),
                 ),
-                _BottomNavItem(
-                  icon: Icons.map_outlined,
-                  activeIcon: Icons.map_rounded,
-                  label: 'Maps',
-                  index: 4,
-                  current: _currentIndex,
-                  onTap: (i) => setState(() => _currentIndex = i),
-                ),
               ],
             ),
           ),
@@ -139,8 +129,7 @@ class _BottomNavItem extends StatelessWidget {
               ),
               child: Icon(
                 isActive ? activeIcon : icon,
-                color:
-                    isActive ? AppColors.primary : AppColors.textSecondary,
+                color: isActive ? AppColors.primary : AppColors.textSecondary,
                 size: 24,
               ),
             ),
@@ -150,8 +139,7 @@ class _BottomNavItem extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-                color:
-                    isActive ? AppColors.primary : AppColors.textSecondary,
+                color: isActive ? AppColors.primary : AppColors.textSecondary,
               ),
             ),
           ],
