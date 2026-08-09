@@ -27,8 +27,6 @@ Aplikasi ini digunakan oleh pemilik atau pengelola UMKM untuk memantau data prod
 https://my-json-server.typicode.com/strawcrmlss/tanian-api/products
 
 ## Struktur Folder
-## Struktur Folder
-
 lib/
 - screens/
   - dashboard_screen.dart
