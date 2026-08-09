@@ -27,26 +27,27 @@ Aplikasi ini digunakan oleh pemilik atau pengelola UMKM untuk memantau data prod
 https://my-json-server.typicode.com/strawcrmlss/tanian-api/products
 
 ## Struktur Folder
-lib/
-screens/
-dashboard_screen.dart
-product_screen.dart
-profile_screen.dart
-product_detail_screen.dart
-product_form_screen.dart
-widgets/
-dashboard_header.dart
-metric_card.dart
-sales_list_item.dart
-product_card.dart
-quick_stat.dart
-models/
-product_item.dart
-providers/
-product_provider.dart
-utils/
-app_colors.dart
-formatter.dart
+lib
+├── screens
+│   ├── dashboard_screen.dart
+│   ├── product_screen.dart
+│   ├── profile_screen.dart
+│   ├── product_detail_screen.dart
+│   └── product_form_screen.dart
+├── widgets
+│   ├── dashboard_header.dart
+│   ├── metric_card.dart
+│   ├── sales_list_item.dart
+│   ├── product_card.dart
+│   └── quick_stat.dart
+├── models
+│   └── product_item.dart
+├── providers
+│   └── product_provider.dart
+└── utils
+    ├── app_colors.dart
+    └── formatter.dart
+
 
 
 
