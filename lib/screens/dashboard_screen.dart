@@ -163,7 +163,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisCount: isWide ? 5 : 2,
-                  childAspectRatio: isWide ? 1.25 : 1.5,
+                  childAspectRatio: isWide ? 1 : 0.8,
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
                   children: [

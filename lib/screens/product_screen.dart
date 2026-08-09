@@ -123,39 +123,40 @@ class _ProductScreenState extends State<ProductScreen> {
             ]),
           ),
 
-          // Grid
+          // Grid / Empty state
           Expanded(
             child: filtered.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('🔍',
-                            style: TextStyle(fontSize: 52)),
-                        const SizedBox(height: 12),
-                        Text('Produk tidak ditemukan',
-                            style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary)),
-                        const SizedBox(height: 4),
-                        Text('Coba kata kunci lain',
-                            style: GoogleFonts.inter(
-                                fontSize: 13,
-                                color: AppColors.textSecondary)),
-                      ],
+                ? SingleChildScrollView(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 80),
+                        child: Column(
+                          children: [
+                            const Text('🔍', style: TextStyle(fontSize: 52)),
+                            const SizedBox(height: 12),
+                            Text('Produk tidak ditemukan',
+                                style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary)),
+                            const SizedBox(height: 4),
+                            Text('Coba kata kunci lain',
+                                style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    color: AppColors.textSecondary)),
+                          ],
+                        ),
+                      ),
                     ),
                   )
                 : LayoutBuilder(
                     builder: (context, constraints) {
                       final isWide = constraints.maxWidth >= 600;
                       return GridView.builder(
-                        padding:
-                            const EdgeInsets.fromLTRB(16, 4, 16, 96),
-                        gridDelegate:
-                            SliverGridDelegateWithFixedCrossAxisCount(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: isWide ? 3 : 2,
-                          childAspectRatio: 0.76,
+                          childAspectRatio: 0.55,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),

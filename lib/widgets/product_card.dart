@@ -5,7 +5,7 @@ import '../utils/app_colors.dart';
 import '../utils/formatter.dart';
 import 'trend_badge.dart';
 
-/// Custom Widget 3 — Kartu Produk untuk GridView
+/// Custom Widget — Kartu Produk untuk GridView
 class ProductCard extends StatelessWidget {
   final ProductItem product;
   final VoidCallback? onTap;
@@ -46,16 +46,20 @@ class ProductCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Nama produk — aman dari overflow
                   Text(
                     product.name,
-                    style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 3),
+
+                  // Kategori + trend badge
                   Row(children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -64,24 +68,32 @@ class ProductCard extends StatelessWidget {
                         color: AppColors.primaryLight.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(5),
                       ),
-                      child: Text(product.category,
-                          style: GoogleFonts.inter(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primaryDark)),
+                      child: Text(
+                        product.category,
+                        style: GoogleFonts.inter(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primaryDark,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 5),
                     TrendBadge(trend: product.trend, small: true),
                   ]),
                   const SizedBox(height: 6),
+
+                  // Harga
                   Text(
                     Formatter.currency(product.price),
                     style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primaryDark),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primaryDark,
+                    ),
                   ),
                   const SizedBox(height: 4),
+
+                  // Stok + terjual
                   Row(children: [
                     Container(
                       width: 6,
@@ -93,19 +105,25 @@ class ProductCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Expanded(
-                      child: Text('Stok: ${product.stock}',
-                          style: GoogleFonts.inter(
-                              fontSize: 10,
-                              color: AppColors.textSecondary),
-                          overflow: TextOverflow.ellipsis),
-                    ),
-                    Text('${product.sold} terjual',
+                      child: Text(
+                        'Stok: ${product.stock}',
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.inter(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600,
-                            color: product.isTrendUp
-                                ? AppColors.success
-                                : AppColors.error)),
+                          fontSize: 10,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${product.sold} terjual',
+                      style: GoogleFonts.inter(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                        color: product.isTrendUp
+                            ? AppColors.success
+                            : AppColors.error,
+                      ),
+                    ),
                   ]),
                 ],
               ),
@@ -134,15 +152,19 @@ class ProductCard extends StatelessWidget {
           color: AppColors.primaryLight.withValues(alpha: 0.2),
           child: const Center(
             child: CircularProgressIndicator(
-                strokeWidth: 2, color: AppColors.primary),
+              strokeWidth: 2,
+              color: AppColors.primary,
+            ),
           ),
         );
       },
       errorBuilder: (_, __, ___) => Container(
         color: AppColors.primaryLight.withValues(alpha: 0.2),
         child: Center(
-          child: Text(product.categoryEmoji,
-              style: const TextStyle(fontSize: 32)),
+          child: Text(
+            product.categoryEmoji,
+            style: const TextStyle(fontSize: 32),
+          ),
         ),
       ),
     );
