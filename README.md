@@ -48,7 +48,3 @@ lib
     ├── app_colors.dart
     └── formatter.dart
 
-
-
-
-## Struktur Folder
