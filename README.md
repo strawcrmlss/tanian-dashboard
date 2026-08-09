@@ -50,6 +50,4 @@ lib/
   - app_colors.dart
   - formatter.dart
 
-    ├── app_colors.dart
-    └── formatter.dart
 
