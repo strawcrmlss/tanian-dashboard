@@ -5,6 +5,7 @@ import 'dashboard_screen.dart';
 import 'product_screen.dart';
 import 'report_screen.dart';
 import 'profile_screen.dart';
+import 'maps_screen.dart'; // Tambahan import untuk Maps
 
 /// Layar utama dengan BottomNavigationBar.
 /// Menggunakan IndexedStack agar state tiap tab tetap terjaga.
@@ -23,6 +24,7 @@ class _MainScreenState extends State<MainScreen> {
     ProductScreen(),
     ReportScreen(),
     ProfileScreen(),
+    MapsScreen(), // Tambahan tab Maps
   ];
 
   @override
@@ -78,6 +80,14 @@ class _MainScreenState extends State<MainScreen> {
                   activeIcon: Icons.person_rounded,
                   label: 'Profil',
                   index: 3,
+                  current: _currentIndex,
+                  onTap: (i) => setState(() => _currentIndex = i),
+                ),
+                _BottomNavItem(
+                  icon: Icons.map_outlined,
+                  activeIcon: Icons.map_rounded,
+                  label: 'Maps',
+                  index: 4,
                   current: _currentIndex,
                   onTap: (i) => setState(() => _currentIndex = i),
                 ),

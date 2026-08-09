@@ -1,14 +1,14 @@
 import 'dart:typed_data';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/product_item.dart';
 import '../providers/product_provider.dart';
 import '../utils/app_colors.dart';
 
 class ProductFormScreen extends StatefulWidget {
-  final ProductItem? product; // null = tambah baru
+  final ProductItem? product;
 
   const ProductFormScreen({super.key, this.product});
 
@@ -29,12 +29,13 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   bool _isLoading = false;
 
   // ── IMAGE STATE ─────────────────────────────────────────────────
-  Uint8List? _imageBytes;       // bytes dari file picker (baru dipilih)
-  bool _imageCleared = false;   // user sengaja hapus gambar
+  Uint8List? _imageBytes;
+  bool _imageCleared = false;
+
+  final ImagePicker _picker = ImagePicker();
 
   bool get _isEdit => widget.product != null;
 
-  /// Apakah ada gambar yang akan ditampilkan (preview)
   bool get _hasPreview {
     if (_imageBytes != null) return true;
     if (_imageCleared) return false;
@@ -62,7 +63,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       _descCtrl.text = p.description;
       _category = _categories.contains(p.category) ? p.category : 'Lainnya';
       _trend = p.trend;
-      _imageBytes = p.imageBytes; // pulihkan bytes jika pernah dipilih
+      _imageBytes = p.imageBytes;
     }
   }
 
@@ -79,47 +80,38 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   // ── IMAGE PICKER ─────────────────────────────────────────────────
   Future<void> _pickImage() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'],
-        withData: true, // penting untuk web — langsung return bytes
+      final XFile? file = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 1024,
+        maxHeight: 1024,
       );
 
-      if (result == null || result.files.isEmpty) return;
+      if (file == null) return;
 
-      final file = result.files.first;
-      final bytes = file.bytes;
-
-      if (bytes == null) {
-        _showSnackBar('Gagal membaca file gambar', isError: true);
-        return;
-      }
+      final bytes = await file.readAsBytes();
 
       // Validasi ukuran maks 5 MB
       if (bytes.lengthInBytes > 5 * 1024 * 1024) {
-        _showSnackBar(
-          'Ukuran file terlalu besar. Maksimal 5 MB',
-          isError: true,
-        );
+        if (mounted) {
+          _showSnackBar(
+            'Ukuran file terlalu besar. Maksimal 5 MB',
+            isError: true,
+          );
+        }
         return;
       }
 
-      // Validasi ekstensi
-      final ext = (file.extension ?? '').toLowerCase();
-      if (!['jpg', 'jpeg', 'png', 'webp'].contains(ext)) {
-        _showSnackBar(
-          'Format tidak didukung. Gunakan JPG, PNG, atau WebP',
-          isError: true,
-        );
-        return;
+      if (mounted) {
+        setState(() {
+          _imageBytes = bytes;
+          _imageCleared = false;
+        });
       }
-
-      setState(() {
-        _imageBytes = bytes;
-        _imageCleared = false;
-      });
     } catch (e) {
-      _showSnackBar('Gagal memilih foto: $e', isError: true);
+      if (mounted) {
+        _showSnackBar('Gagal memilih foto: $e', isError: true);
+      }
     }
   }
 
@@ -137,20 +129,16 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     await Future.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
 
-    // Tentukan gambar final
     Uint8List? finalBytes;
     String? finalUrl;
 
     if (_imageBytes != null) {
-      // User memilih gambar baru
       finalBytes = _imageBytes;
       finalUrl = null;
     } else if (_imageCleared) {
-      // User menghapus gambar → tidak ada gambar
       finalBytes = null;
       finalUrl = null;
     } else if (_isEdit) {
-      // Edit tanpa mengganti gambar → pertahankan gambar lama
       finalBytes = widget.product!.imageBytes;
       finalUrl = widget.product!.customImageUrl;
     }
@@ -186,12 +174,14 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   }
 
   void _showSnackBar(String msg, {bool isError = false}) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
         backgroundColor: isError ? AppColors.error : AppColors.primary,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -212,14 +202,14 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
 
-                // ── SECTION FOTO PRODUK ──────────────────────────────
+                // ── FOTO PRODUK ────────────────────────────────────
                 _buildLabel('Foto Produk'),
                 const SizedBox(height: 10),
                 _buildImageSection(),
                 const SizedBox(height: 24),
 
-                // ── NAMA PRODUK ────────────────────────────────────────
-                _buildFieldWidget(
+                // ── NAMA ───────────────────────────────────────────
+                _buildField(
                   label: 'Nama Produk',
                   ctrl: _nameCtrl,
                   hint: 'Contoh: Bayam Hijau Segar',
@@ -233,7 +223,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 ),
                 const SizedBox(height: 18),
 
-                // ── KATEGORI ──────────────────────────────────────────
+                // ── KATEGORI ───────────────────────────────────────
                 _buildDropdown(
                   label: 'Kategori',
                   icon: Icons.category_outlined,
@@ -243,58 +233,72 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 ),
                 const SizedBox(height: 18),
 
-                // ── HARGA ─────────────────────────────────────────────
-                _buildFieldWidget(
+                // ── HARGA ──────────────────────────────────────────
+                _buildField(
                   label: 'Harga (Rp)',
                   ctrl: _priceCtrl,
                   hint: 'Contoh: 15000',
                   icon: Icons.price_change_outlined,
                   inputType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly
+                  ],
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Harga wajib diisi';
-                    if (int.tryParse(v.trim()) == null) return 'Harga harus angka';
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Harga wajib diisi';
+                    }
+                    if (int.tryParse(v.trim()) == null) {
+                      return 'Harga harus angka';
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 18),
 
-                // ── STOK & TERJUAL ────────────────────────────────────
+                // ── STOK & TERJUAL ─────────────────────────────────
                 Row(children: [
                   Expanded(
-                    child: _buildFieldWidget(
+                    child: _buildField(
                       label: 'Stok',
                       ctrl: _stockCtrl,
                       hint: '0',
                       icon: Icons.warehouse_outlined,
                       inputType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly
+                      ],
                       validator: (v) =>
-                          v == null || v.trim().isEmpty ? 'Wajib diisi' : null,
+                          v == null || v.trim().isEmpty
+                              ? 'Wajib diisi'
+                              : null,
                     ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
-                    child: _buildFieldWidget(
+                    child: _buildField(
                       label: 'Terjual',
                       ctrl: _soldCtrl,
                       hint: '0',
                       icon: Icons.shopping_bag_outlined,
                       inputType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly
+                      ],
                       validator: (v) =>
-                          v == null || v.trim().isEmpty ? 'Wajib diisi' : null,
+                          v == null || v.trim().isEmpty
+                              ? 'Wajib diisi'
+                              : null,
                     ),
                   ),
                 ]),
                 const SizedBox(height: 18),
 
-                // ── TREN ──────────────────────────────────────────────
+                // ── TREN ───────────────────────────────────────────
                 _buildTrendField(),
                 const SizedBox(height: 18),
 
-                // ── DESKRIPSI ─────────────────────────────────────────
-                _buildFieldWidget(
+                // ── DESKRIPSI ──────────────────────────────────────
+                _buildField(
                   label: 'Deskripsi (opsional)',
                   ctrl: _descCtrl,
                   hint: 'Deskripsi singkat produk...',
@@ -303,7 +307,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // ── TOMBOL SIMPAN ─────────────────────────────────────
+                // ── TOMBOL SIMPAN ──────────────────────────────────
                 SizedBox(
                   width: double.infinity,
                   height: 52,
@@ -320,9 +324,12 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                             ),
                           )
                         : Text(
-                            _isEdit ? 'Simpan Perubahan' : 'Tambah Produk',
+                            _isEdit
+                                ? 'Simpan Perubahan'
+                                : 'Tambah Produk',
                             style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600, fontSize: 15),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15),
                           ),
                   ),
                 ),
@@ -335,12 +342,12 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     );
   }
 
-  // ── IMAGE SECTION WIDGET ─────────────────────────────────────────
+  // ── IMAGE SECTION ─────────────────────────────────────────────────
   Widget _buildImageSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Preview box
+        // Preview
         ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: Container(
@@ -361,12 +368,11 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         ),
         const SizedBox(height: 12),
 
-        // Action buttons
+        // Tombol aksi
         if (_hasPreview)
-          // Ada gambar — tampilkan Ganti & Hapus
           Row(children: [
             Expanded(
-              child: _imageActionBtn(
+              child: _imgBtn(
                 emoji: '🔄',
                 label: 'Ganti Foto',
                 color: AppColors.primary,
@@ -375,7 +381,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: _imageActionBtn(
+              child: _imgBtn(
                 emoji: '🗑',
                 label: 'Hapus Foto',
                 color: AppColors.error,
@@ -384,8 +390,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             ),
           ])
         else
-          // Belum ada gambar — tampilkan Upload
-          _imageActionBtn(
+          _imgBtn(
             emoji: '📷',
             label: 'Upload Foto',
             color: AppColors.primary,
@@ -397,7 +402,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   }
 
   Widget _buildPreview() {
-    // 1. Ada bytes baru dari file picker
+    // Bytes baru dipilih
     if (_imageBytes != null) {
       return Image.memory(
         _imageBytes!,
@@ -407,10 +412,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       );
     }
 
-    // 2. Edit produk, gambar tidak dihapus
+    // Edit — tampilkan gambar lama jika belum dihapus
     if (_hasPreview && _isEdit) {
       final p = widget.product!;
-      // Produk punya bytes dari sebelumnya (misal setelah edit lalu balik)
       if (p.imageBytes != null) {
         return Image.memory(
           p.imageBytes!,
@@ -419,7 +423,6 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           height: 180,
         );
       }
-      // Produk punya URL
       if (p.customImageUrl?.isNotEmpty ?? false) {
         return Image.network(
           p.imageUrl,
@@ -428,27 +431,29 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           height: 180,
           loadingBuilder: (_, child, progress) {
             if (progress == null) return child;
-            return Center(
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.primary,
-                value: progress.expectedTotalBytes != null
-                    ? progress.cumulativeBytesLoaded /
-                        progress.expectedTotalBytes!
-                    : null,
+            return Container(
+              color: AppColors.primaryLight.withValues(alpha: 0.2),
+              child: Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primary,
+                  value: progress.expectedTotalBytes != null
+                      ? progress.cumulativeBytesLoaded /
+                          progress.expectedTotalBytes!
+                      : null,
+                ),
               ),
             );
           },
-          errorBuilder: (_, __, ___) => _placeholderWidget(),
+          errorBuilder: (_, __, ___) => _placeholder(),
         );
       }
     }
 
-    // 3. Placeholder
-    return _placeholderWidget();
+    return _placeholder();
   }
 
-  Widget _placeholderWidget() {
+  Widget _placeholder() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -461,13 +466,11 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         Text(
           'Belum ada foto produk',
           style: GoogleFonts.inter(
-            fontSize: 13,
-            color: AppColors.textSecondary,
-          ),
+              fontSize: 13, color: AppColors.textSecondary),
         ),
         const SizedBox(height: 4),
         Text(
-          'JPG, PNG, WebP — maks 5 MB',
+          'Pilih gambar dari galeri — maks 5 MB',
           style: GoogleFonts.inter(
             fontSize: 11,
             color: AppColors.textSecondary.withValues(alpha: 0.6),
@@ -477,7 +480,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     );
   }
 
-  Widget _imageActionBtn({
+  Widget _imgBtn({
     required String emoji,
     required String label,
     required Color color,
@@ -488,7 +491,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       onTap: onTap,
       child: Container(
         width: fullWidth ? double.infinity : null,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
@@ -496,7 +500,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
+          mainAxisSize:
+              fullWidth ? MainAxisSize.max : MainAxisSize.min,
           children: [
             Text(emoji, style: const TextStyle(fontSize: 16)),
             const SizedBox(width: 8),
@@ -515,7 +520,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   }
 
   // ── FORM HELPERS ─────────────────────────────────────────────────
-  Widget _buildFieldWidget({
+  Widget _buildField({
     required String label,
     required TextEditingController ctrl,
     required String hint,
@@ -539,8 +544,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           validator: validator,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle:
-                GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary),
+            hintStyle: GoogleFonts.inter(
+                fontSize: 14, color: AppColors.textSecondary),
             prefixIcon:
                 Icon(icon, color: AppColors.textSecondary, size: 20),
           ),
@@ -563,7 +568,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: value,
-          style: GoogleFonts.inter(fontSize: 14, color: AppColors.textPrimary),
+          style: GoogleFonts.inter(
+              fontSize: 14, color: AppColors.textPrimary),
           decoration: InputDecoration(
             prefixIcon:
                 Icon(icon, color: AppColors.textSecondary, size: 20),
@@ -571,7 +577,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           items: items
               .map((c) => DropdownMenuItem(
                   value: c,
-                  child: Text(c, style: GoogleFonts.inter(fontSize: 14))))
+                  child: Text(c,
+                      style: GoogleFonts.inter(fontSize: 14))))
               .toList(),
           onChanged: onChanged,
         ),
@@ -586,11 +593,15 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         _buildLabel('Tren Penjualan'),
         const SizedBox(height: 8),
         Row(children: [
-          Expanded(child: _trendOption('up', 'Naik',
-              Icons.trending_up_rounded, AppColors.success)),
+          Expanded(
+            child: _trendOption('up', 'Naik',
+                Icons.trending_up_rounded, AppColors.success),
+          ),
           const SizedBox(width: 12),
-          Expanded(child: _trendOption('down', 'Turun',
-              Icons.trending_down_rounded, AppColors.error)),
+          Expanded(
+            child: _trendOption('down', 'Turun',
+                Icons.trending_down_rounded, AppColors.error),
+          ),
         ]),
       ],
     );
@@ -602,9 +613,12 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     return GestureDetector(
       onTap: () => setState(() => _trend = value),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(
+            horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.1) : AppColors.surface,
+          color: isSelected
+              ? color.withValues(alpha: 0.1)
+              : AppColors.surface,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected ? color : AppColors.border,
@@ -623,7 +637,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               style: GoogleFonts.poppins(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? color : AppColors.textSecondary,
+                color:
+                    isSelected ? color : AppColors.textSecondary,
               ),
             ),
           ],

@@ -18,6 +18,10 @@ class ProductItem {
   final String? customImageUrl;
   final Uint8List? imageBytes; // gambar lokal dari file picker
 
+  // Tambahan field lokasi
+  final double latitude;
+  final double longitude;
+
   const ProductItem({
     required this.id,
     required this.name,
@@ -29,6 +33,8 @@ class ProductItem {
     this.description = '',
     this.customImageUrl,
     this.imageBytes,
+    this.latitude = 0.0,
+    this.longitude = 0.0,
   });
 
   /// Mengubah Map JSON dari REST API menjadi objek ProductItem
@@ -45,15 +51,14 @@ class ProductItem {
       trend: json['trend'] as String? ?? 'up',
       description: json['description'] as String? ??
           '$name adalah produk unggulan kategori $category dari UMKM Tanian Agro. '
-              'Dipanen segar langsung dari petani lokal Indonesia dengan standar kualitas terjamin.',
+          'Dipanen segar langsung dari petani lokal Indonesia dengan standar kualitas terjamin.',
       customImageUrl: json['imageUrl'] as String?,
       imageBytes: null,
+      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
+      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
-  /// Membuat salinan dengan field yang diubah.
-  /// Untuk set imageBytes/customImageUrl ke null secara eksplisit,
-  /// gunakan parameter clearImageBytes/clearCustomUrl.
   ProductItem copyWith({
     String? id,
     String? name,
@@ -67,6 +72,8 @@ class ProductItem {
     bool clearCustomUrl = false,
     Uint8List? imageBytes,
     bool clearImageBytes = false,
+    double? latitude,
+    double? longitude,
   }) {
     return ProductItem(
       id: id ?? this.id,
@@ -79,15 +86,14 @@ class ProductItem {
       description: description ?? this.description,
       customImageUrl: clearCustomUrl ? null : (customImageUrl ?? this.customImageUrl),
       imageBytes: clearImageBytes ? null : (imageBytes ?? this.imageBytes),
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
     );
   }
 
   bool get isTrendUp => trend == 'up';
-
-  /// true jika produk memiliki gambar lokal dari file picker
   bool get hasLocalImage => imageBytes != null;
 
-  /// URL foto untuk Image.network (hanya saat tidak ada imageBytes)
   String get imageUrl {
     if (customImageUrl != null && customImageUrl!.isNotEmpty) {
       return customImageUrl!;
